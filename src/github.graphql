@@ -1,0 +1,17 @@
+query getPullRequestDetail($query: String!, $first: Int!, $before: String, $after: String) {
+    search(query: $query, first: $first, type: ISSUE, before: $before, after: $after) {
+        edges {
+            cursor
+            node {
+                ... on PullRequest {
+                    id
+                    title
+                    url
+                    state
+                    isDraft
+                    mergedAt
+                }
+            }
+        }
+    }
+}

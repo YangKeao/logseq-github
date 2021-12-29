@@ -7,14 +7,22 @@
   "license": "MIT",
   "scripts": {
     "dev": "parcel index.html --public-url ./",
-    "build": "parcel build --no-source-maps index.html --public-url ./"
+    "build": "parcel build --no-source-maps index.html --public-url ./",
+    "graphql-codegen": "graphql-codegen --config codegen.yml"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "2.3.0",
+    "@graphql-codegen/introspection": "^2.1.0",
+    "@graphql-codegen/typescript": "^2.4.1",
+    "@graphql-codegen/typescript-graphql-request": "^4.3.2",
+    "@graphql-codegen/typescript-operations": "2.2.1",
     "@logseq/libs": "^0.0.1-alpha.31",
     "parcel": "^2.0.1"
   },
   "dependencies": {
-    "@types/node": "^17.0.5"
+    "@types/node": "^17.0.5",
+    "graphql": "^16.2.0",
+    "graphql-request": "^3.7.0"
   },
   "logseq": {
     "id": "_96a2txaj9",
