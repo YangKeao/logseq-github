@@ -1,0 +1,23 @@
+{
+  "name": "logseq-github",
+  "version": "0.0.1",
+  "description": "a toolset to interact between logseq and github",
+  "repository": "https://github.com/YangKeao/logseq-github",
+  "author": "YangKeao",
+  "license": "MIT",
+  "scripts": {
+    "dev": "parcel index.html --public-url ./",
+    "build": "parcel build --no-source-maps index.html --public-url ./"
+  },
+  "devDependencies": {
+    "@logseq/libs": "^0.0.1-alpha.31",
+    "parcel": "^2.0.1"
+  },
+  "dependencies": {
+    "@types/node": "^17.0.5"
+  },
+  "logseq": {
+    "id": "_96a2txaj9",
+    "main": "dist/index.html"
+  }
+}
