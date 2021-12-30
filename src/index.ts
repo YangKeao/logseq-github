@@ -143,6 +143,8 @@ function main () {
         let sync_duration = Duration.parse(sync_period);
 
         const sync_issues = async () => {
+            console.log("logseq-github: sync issues", `uuid: ${block_uuid}`)
+
             if (recent_day > 0) {
                 const pastDay = parseInt(recent_day)
                 if (pastDay > 0) {
@@ -151,10 +153,13 @@ function main () {
                 }
             }
     
-            let target_block = await logseq.Editor.getBlock(block_uuid)
+            // `includeChildren` will not only get children, but also clear the children cache
+            let target_block = await logseq.Editor.getBlock(block_uuid, {
+                includeChildren: true,
+            })
             const blocks = await renderGithubIssuesToBlocks(repo, query)
 
-            let exist_children = target_block.children || [];
+            let exist_children = target_block.children as Array<BlockEntity> || [] ;
             // remove disappeared issues
             await Promise.all(exist_children.map(async child => {
                 const child_block = await logseq.Editor.getBlock(child[1])
@@ -164,19 +169,18 @@ function main () {
                 
                 if (blocks.find(b => b.properties?.issue_number == child_block.properties?.issueNumber) == undefined) {
                     // TODO: support other merge strategy
+                    console.log("logseq-github: remove issue", child_block.properties?.issueNumber)
                     logseq.Editor.removeBlock(child_block.uuid)
                 }
             }))
             
-            const children_entities = (await Promise.all(exist_children.map(async child => {
-                return await logseq.Editor.getBlock(child[1])
-            }))).filter(item => item != null)
             // add new issues
             await Promise.all(blocks.map(async block => {
-                if (children_entities.find(child => {
+                if (exist_children.find(child => {
                     return child.properties?.issueNumber == block.properties?.issue_number
                 }) == undefined) {
                     // This is a new block
+                    console.log("logseq-github: insert issue", block.properties?.issue_number)
                     logseq.Editor.insertBlock(target_block.uuid, block.content, {
                         sibling: false,
                         properties: block.properties,
@@ -184,8 +188,9 @@ function main () {
                 }
             }))
         };
-        await sync_issues();
+        console.log("logseq-github: setup interval controller for issues", `uuid: ${block_uuid}`)
         setInterval(sync_issues, sync_duration.toMillis())
+        await sync_issues()
     })
 }
 
