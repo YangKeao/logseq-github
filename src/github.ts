@@ -124,6 +124,30 @@ export class GithubClient {
         this.client = getSdk(graphqlClient)
     }
 
+    async listAllIssues(repo: string, query: string) {
+        const limit = 20
+        
+        let issues = []
+        let afterId = null
+        while(true) {
+            const response = await this.client.getIssues({
+                query: query + ` repo:${repo} is:issue`,
+                first: limit,
+                after: afterId,
+            })
+            issues = issues.concat(response.search.edges.map(edge => edge.node))
+
+            if (response.search.edges.length < limit) {
+                break
+            } else {
+                const last_edge = response.search.edges[response.search.edges.length - 1]
+                afterId = last_edge.cursor
+            }
+        }
+
+        return issues
+    }
+
     async listRecentMergedPRInRepo(username: string, repo: string, after: Date) {
         const limit = 20
 
@@ -153,12 +177,12 @@ export class GithubClient {
         const limit = 20
 
         let prs = []
-        let after = null
+        let afterId = null
         while(true) {
             const response = await this.client.getPullRequestDetail({
                 query: `author:${username} repo:${repo} is:open is:pr`,
                 first: limit,
-                after
+                after: afterId
             })
             prs = prs.concat(response.search.edges.map(edge => edge.node))
 
@@ -166,7 +190,7 @@ export class GithubClient {
                 break
             } else {
                 const last_edge = response.search.edges[response.search.edges.length - 1]
-                after = last_edge.cursor
+                afterId = last_edge.cursor
             }
         }
 

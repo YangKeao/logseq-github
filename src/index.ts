@@ -22,12 +22,18 @@ const githubLastWeekPullRequestSlachCommand = async () => {
     monday.setMinutes(0);
     monday.setSeconds(0);
 
-    await logseq.Editor.insertAtEditingCursor(
-        `{{renderer :githubRecentPR, USERNAME, REPO, ${monday} }}`
-    )
+    const currentBlock = await logseq.Editor.getCurrentBlock()
+    const [username, repo] = currentBlock.content.split(",").map(item => item.trim())
+
+    const newBlocks = await renderGithubRecentPullRequestToBlocks(username, repo, new Date(monday));
+    newBlocks.forEach(b => {
+        logseq.Editor.insertBlock(currentBlock.uuid, b.content, {
+            sibling: false,
+        })
+    })
 }
 
-const renderGithubUrl = (url: string, renderRepoName: boolean = true) => {
+const renderGithubUrl = (url: string, renderRepoName: boolean = true, html: boolean = true) => {
     const parsed = parseGithubUrl(url)
     if (parsed == null) {
         return `<a target="_blank" href="${url}" class="external-link">INVALID URL</a>`
@@ -42,6 +48,9 @@ const renderGithubUrl = (url: string, renderRepoName: boolean = true) => {
     case 'pr':
     case 'issue':
         content += `#${parsed.number}`
+        if (!html) {
+            content = '\\' + content
+        }
         if (parsed.comment != null) {
             content += "(comment)"
         }
@@ -51,40 +60,62 @@ const renderGithubUrl = (url: string, renderRepoName: boolean = true) => {
         break
     }
 
-    return `<a target="_blank" href="${url}" class="external-link">${content}</a>`
+    if (html) {
+        return `<a target="_blank" href="${url}" class="external-link">${content}</a>`
+    } else {
+        return `\[${content}](${url})`
+    }
 }
 
-const renderGithubRecentPullRequest = async (username: string, repo: string, mergedPrAfter: Date) => {
-    // TODO: get token from the settings
-    const client = new GithubClient("GITHUB_TOKEN")
+const renderGithubRecentPullRequestToBlocks = async (username: string, repo: string, mergedPrAfter: Date) => {
+    const token = logseq.settings["github_access_token"];
+    if (token == null) {
+        throw new Error("Github access token is not set")
+    }
+
+    const client = new GithubClient(token)
     const openedPr = await client.listAllOpenedPRInRepo(username, repo)
     const mergedPr = await client.listRecentMergedPRInRepo(username, repo, mergedPrAfter)
 
-    let content = "<ul>"
+    let blocks = []
     openedPr.forEach((activity: any) => {
         let tag = ""
         if (activity.isDraft) {
-            tag = "[WIP]"
+            tag = "\[WIP]"
         } else if (activity.state == "OPEN") {
-            tag = "[REVIEW]"
+            tag = "\[REVIEW]"
         }
-        content += `<li>
-            <span>${tag}</span>
-            <span>${activity.title}</span>
-            <span>${renderGithubUrl(activity.url, false)}</span>
-        </li>`
+        blocks.push({
+            content: `${tag} ${activity.title.replaceAll('#', '\\#')}${renderGithubUrl(activity.url, false, false)}`
+        })
     })
     mergedPr.forEach((activity: any) => {
-        let tag = "DONE"
-        content += `<li>
-            <span>${tag}</span>
-            <span>${activity.title}</span>
-            <span>${renderGithubUrl(activity.url, false)}</span>
-        </li>`
+        let tag = "\[DONE]"
+        blocks.push({
+            content: `${tag} ${activity.title.replaceAll('#', '\\#')}${renderGithubUrl(activity.url, false, false)}`
+        })
     })
-    content += "</ul>"
 
-    return content
+    return blocks
+}
+
+const renderGithubIssues = async (repo: string, query: string) => {
+    const token = logseq.settings["github_access_token"];
+    if (token == null) {
+        throw new Error("Github access token is not set")
+    }
+
+    const client = new GithubClient(token)
+    const issues = await client.listAllIssues(repo, query)
+
+    let ui = "<ul>"
+    issues.forEach((issue: any) => {
+        ui += `
+            <li>${issue.title}</li>
+        `
+    })
+    ui += "</ul>"
+    return ui
 }
 
 function main () {
@@ -102,14 +133,23 @@ function main () {
     })
 
     logseq.App.onMacroRendererSlotted(async ({slot, payload}) => {
-        const [type, username, repo, after] = payload.arguments
-        if (!type?.startsWith(':githubRecentPR')) return
+        let [type, repo, query, recent] = payload.arguments
+        if (!type?.startsWith(':githubIssues')) return
 
+        if (recent && recent.length > 0) {
+            const pastDay = parseInt(recent)
+            const now = new Date()
+            now.setDate(now.getDate() - pastDay)
+            query += ` updated:>=${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
+        }
         logseq.provideUI({
             slot, reset: true,
-            template: await renderGithubRecentPullRequest(username, repo, new Date(after))
+            template: await renderGithubIssues(repo, query)
         })
     })
 }
 
-logseq.ready(main).catch(console.error)
+logseq.ready(main).catch((e) => {
+    logseq.App.showMsg(e.message, 'error')
+    console.error(e)
+})

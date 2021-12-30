@@ -22685,6 +22685,16 @@ export type GetPullRequestDetailQueryVariables = Exact<{
 
 export type GetPullRequestDetailQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue' } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest', id: string, title: string, url: any, state: PullRequestState, isDraft: boolean, mergedAt?: any | null | undefined } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
 
+export type GetIssuesQueryVariables = Exact<{
+  query: Scalars['String'];
+  first: Scalars['Int'];
+  before?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type GetIssuesQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue', id: string, title: string, url: any, state: IssueState } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest' } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
+
 
 export const GetPullRequestDetailDocument = gql`
     query getPullRequestDetail($query: String!, $first: Int!, $before: String, $after: String) {
@@ -22711,6 +22721,29 @@ export const GetPullRequestDetailDocument = gql`
   }
 }
     `;
+export const GetIssuesDocument = gql`
+    query getIssues($query: String!, $first: Int!, $before: String, $after: String) {
+  search(
+    query: $query
+    first: $first
+    type: ISSUE
+    before: $before
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        ... on Issue {
+          id
+          title
+          url
+          state
+        }
+      }
+    }
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string) => Promise<T>;
 
@@ -22721,6 +22754,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
   return {
     getPullRequestDetail(variables: GetPullRequestDetailQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetPullRequestDetailQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetPullRequestDetailQuery>(GetPullRequestDetailDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getPullRequestDetail');
+    },
+    getIssues(variables: GetIssuesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetIssuesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetIssuesQuery>(GetIssuesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getIssues');
     }
   };
 }
