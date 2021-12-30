@@ -10,6 +10,7 @@ query getPullRequestDetail($query: String!, $first: Int!, $before: String, $afte
                     state
                     isDraft
                     mergedAt
+                    number
                 }
             }
         }
@@ -26,6 +27,7 @@ query getIssues($query: String!, $first: Int!, $before: String, $after: String) 
                     title
                     url
                     state
+                    number
                 }
             }
         }

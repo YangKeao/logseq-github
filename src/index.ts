@@ -99,7 +99,7 @@ const renderGithubRecentPullRequestToBlocks = async (username: string, repo: str
     return blocks
 }
 
-const renderGithubIssues = async (repo: string, query: string) => {
+const renderGithubIssues = async (repo: string, query: string, targetUUID: string) => {
     const token = logseq.settings["github_access_token"];
     if (token == null) {
         throw new Error("Github access token is not set")
@@ -108,10 +108,25 @@ const renderGithubIssues = async (repo: string, query: string) => {
     const client = new GithubClient(token)
     const issues = await client.listAllIssues(repo, query)
 
-    let ui = "<ul>"
+    let targetUUIDAttr = ""
+    if (targetUUID) {
+        targetUUIDAttr = `data-target-uuid="${targetUUID}"`
+    }
+    let ui = '<ul class="github-issues">'
     issues.forEach((issue: any) => {
         ui += `
-            <li>${issue.title}</li>
+            <li>
+                <a target="_blank" href="${issue.url}">#${issue.number}</a>
+                <span
+                    class="insert-issue"
+                    data-on-click="insertGithubIssueTODO"
+                    data-issue-url="${issue.url}"
+                    data-issue-number="${issue.number}"
+                    data-issue-title="${issue.title}"
+                    ${targetUUIDAttr}>
+                    ${issue.title}
+                </span>
+            </li>
         `
     })
     ui += "</ul>"
@@ -122,6 +137,25 @@ function main () {
     logseq.Editor.registerSlashCommand('Github Url', githubUrlSlachCommand)
     logseq.Editor.registerSlashCommand('Github Last Week Pull Request', githubLastWeekPullRequestSlachCommand)
 
+    logseq.provideStyle(`
+        ul.github-issues {
+            list-style: none;
+            white-space: normal;
+            margin: 0;
+        }
+
+        ul.github-issues span.insert-issue {
+            cursor: pointer;
+        }
+    `)
+    logseq.provideModel({
+        async insertGithubIssueTODO(e: any) {
+            let {issueNumber, issueTitle, issueUrl, targetUuid} = e.dataset;
+            if (targetUuid) {
+                logseq.Editor.insertBlock(targetUuid, `TODO ${issueTitle} [#${issueNumber}](${issueUrl})`)
+            }
+        }
+    })
     logseq.App.onMacroRendererSlotted(({slot, payload}) => {
         const [type, url] = payload.arguments
         if (!type?.startsWith(':githubUrl')) return
@@ -133,18 +167,20 @@ function main () {
     })
 
     logseq.App.onMacroRendererSlotted(async ({slot, payload}) => {
-        let [type, repo, query, recent] = payload.arguments
+        let [type, repo, query, recent, targetUUID] = payload.arguments
         if (!type?.startsWith(':githubIssues')) return
 
         if (recent && recent.length > 0) {
             const pastDay = parseInt(recent)
-            const now = new Date()
-            now.setDate(now.getDate() - pastDay)
-            query += ` updated:>=${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
+            if (pastDay > 0) {
+                const now = new Date()
+                now.setDate(now.getDate() - pastDay)
+                query += ` updated:>=${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
+            }
         }
         logseq.provideUI({
             slot, reset: true,
-            template: await renderGithubIssues(repo, query)
+            template: await renderGithubIssues(repo, query, targetUUID)
         })
     })
 }

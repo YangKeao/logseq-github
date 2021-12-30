@@ -22683,7 +22683,7 @@ export type GetPullRequestDetailQueryVariables = Exact<{
 }>;
 
 
-export type GetPullRequestDetailQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue' } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest', id: string, title: string, url: any, state: PullRequestState, isDraft: boolean, mergedAt?: any | null | undefined } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
+export type GetPullRequestDetailQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue' } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest', id: string, title: string, url: any, state: PullRequestState, isDraft: boolean, mergedAt?: any | null | undefined, number: number } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
 
 export type GetIssuesQueryVariables = Exact<{
   query: Scalars['String'];
@@ -22693,7 +22693,7 @@ export type GetIssuesQueryVariables = Exact<{
 }>;
 
 
-export type GetIssuesQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue', id: string, title: string, url: any, state: IssueState } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest' } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
+export type GetIssuesQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue', id: string, title: string, url: any, state: IssueState, number: number } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest' } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
 
 
 export const GetPullRequestDetailDocument = gql`
@@ -22715,6 +22715,7 @@ export const GetPullRequestDetailDocument = gql`
           state
           isDraft
           mergedAt
+          number
         }
       }
     }
@@ -22738,6 +22739,7 @@ export const GetIssuesDocument = gql`
           title
           url
           state
+          number
         }
       }
     }
