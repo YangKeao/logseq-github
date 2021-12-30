@@ -1,13 +1,18 @@
 import '@logseq/libs'
+import {BlockEntity} from '@logseq/libs/dist/LSPlugin'
+
+import '@js-joda/core'
+import { DateTimeFormatter, Duration, LocalDate } from '@js-joda/core'
+
 import {parseGithubUrl, GithubClient} from './github'
 
-const githubUrlSlachCommand = async () => {
+const github_url_slash_command = async () => {
     await logseq.Editor.insertAtEditingCursor(
         `{{renderer :githubUrl}}`
     )
 }
 
-const githubLastWeekPullRequestSlachCommand = async () => {
+const github_lastweek_pull_request_slash_command = async () => {
     let now = new Date()
     let day = now.getDay()
     let mondayDate = now.getDate() - day
@@ -25,7 +30,7 @@ const githubLastWeekPullRequestSlachCommand = async () => {
     const currentBlock = await logseq.Editor.getCurrentBlock()
     const [username, repo] = currentBlock.content.split(",").map(item => item.trim())
 
-    const newBlocks = await renderGithubRecentPullRequestToBlocks(username, repo, new Date(monday));
+    const newBlocks = await render_github_recent_pull_request_to_blocks(username, repo, new Date(monday));
     newBlocks.forEach(b => {
         logseq.Editor.insertBlock(currentBlock.uuid, b.content, {
             sibling: false,
@@ -33,7 +38,7 @@ const githubLastWeekPullRequestSlachCommand = async () => {
     })
 }
 
-const renderGithubUrl = (url: string, renderRepoName: boolean = true, html: boolean = true) => {
+const render_github_url = (url: string, renderRepoName: boolean = true, html: boolean = true) => {
     const parsed = parseGithubUrl(url)
     if (parsed == null) {
         return `<a target="_blank" href="${url}" class="external-link">INVALID URL</a>`
@@ -67,18 +72,18 @@ const renderGithubUrl = (url: string, renderRepoName: boolean = true, html: bool
     }
 }
 
-const renderGithubRecentPullRequestToBlocks = async (username: string, repo: string, mergedPrAfter: Date) => {
+const render_github_recent_pull_request_to_blocks = async (username: string, repo: string, mergedPrAfter: Date) => {
     const token = logseq.settings["github_access_token"];
     if (token == null) {
         throw new Error("Github access token is not set")
     }
 
     const client = new GithubClient(token)
-    const openedPr = await client.listAllOpenedPRInRepo(username, repo)
-    const mergedPr = await client.listRecentMergedPRInRepo(username, repo, mergedPrAfter)
+    const opened_pr = await client.list_all_opened_pr_in_repo(username, repo)
+    const merged_pr = await client.list_recent_merged_pr_in_repo(username, repo, mergedPrAfter)
 
     let blocks = []
-    openedPr.forEach((activity: any) => {
+    opened_pr.forEach((activity: any) => {
         let tag = ""
         if (activity.isDraft) {
             tag = "\[WIP]"
@@ -86,102 +91,101 @@ const renderGithubRecentPullRequestToBlocks = async (username: string, repo: str
             tag = "\[REVIEW]"
         }
         blocks.push({
-            content: `${tag} ${activity.title.replaceAll('#', '\\#')}${renderGithubUrl(activity.url, false, false)}`
+            content: `${tag} ${activity.title.replaceAll('#', '\\#')}${render_github_url(activity.url, false, false)}`
         })
     })
-    mergedPr.forEach((activity: any) => {
+    merged_pr.forEach((activity: any) => {
         let tag = "\[DONE]"
         blocks.push({
-            content: `${tag} ${activity.title.replaceAll('#', '\\#')}${renderGithubUrl(activity.url, false, false)}`
+            content: `${tag} ${activity.title.replaceAll('#', '\\#')}${render_github_url(activity.url, false, false)}`
         })
     })
 
     return blocks
 }
 
-const renderGithubIssues = async (repo: string, query: string, targetUUID: string) => {
+const renderGithubIssuesToBlocks = async (repo: string, query: string) => {
     const token = logseq.settings["github_access_token"];
     if (token == null) {
         throw new Error("Github access token is not set")
     }
 
     const client = new GithubClient(token)
-    const issues = await client.listAllIssues(repo, query)
+    const issues = await client.list_all_issues(repo, query)
 
-    let targetUUIDAttr = ""
-    if (targetUUID) {
-        targetUUIDAttr = `data-target-uuid="${targetUUID}"`
-    }
-    let ui = '<ul class="github-issues">'
-    issues.forEach((issue: any) => {
-        ui += `
-            <li>
-                <a target="_blank" href="${issue.url}">#${issue.number}</a>
-                <span
-                    class="insert-issue"
-                    data-on-click="insertGithubIssueTODO"
-                    data-issue-url="${issue.url}"
-                    data-issue-number="${issue.number}"
-                    data-issue-title="${issue.title}"
-                    ${targetUUIDAttr}>
-                    ${issue.title}
-                </span>
-            </li>
-        `
-    })
-    ui += "</ul>"
-    return ui
-}
-
-function main () {
-    logseq.Editor.registerSlashCommand('Github Url', githubUrlSlachCommand)
-    logseq.Editor.registerSlashCommand('Github Last Week Pull Request', githubLastWeekPullRequestSlachCommand)
-
-    logseq.provideStyle(`
-        ul.github-issues {
-            list-style: none;
-            white-space: normal;
-            margin: 0;
-        }
-
-        ul.github-issues span.insert-issue {
-            cursor: pointer;
-        }
-    `)
-    logseq.provideModel({
-        async insertGithubIssueTODO(e: any) {
-            let {issueNumber, issueTitle, issueUrl, targetUuid} = e.dataset;
-            if (targetUuid) {
-                logseq.Editor.insertBlock(targetUuid, `TODO ${issueTitle} [#${issueNumber}](${issueUrl})`)
+    return issues.map((issue: any) => {
+        return {
+            content: `TODO [\#${issue.number}](${issue.url}) ${issue.title.replaceAll('#', '\\#')}`,
+            properties: {
+                // properties will be converted to camelCase by logseq
+                "issue_number": issue.number,
             }
         }
     })
+}
+
+function main () {
+    logseq.Editor.registerSlashCommand('Github Url', github_url_slash_command)
+    logseq.Editor.registerSlashCommand('Github Last Week Pull Request', github_lastweek_pull_request_slash_command)
+
     logseq.App.onMacroRendererSlotted(({slot, payload}) => {
         const [type, url] = payload.arguments
         if (!type?.startsWith(':githubUrl')) return
 
         logseq.provideUI({
             slot, reset: true,
-            template: renderGithubUrl(url)
+            template: render_github_url(url)
         })
     })
 
-    logseq.App.onMacroRendererSlotted(async ({slot, payload}) => {
-        let [type, repo, query, recent, targetUUID] = payload.arguments
-        if (!type?.startsWith(':githubIssues')) return
+    logseq.settings?.issue_block?.forEach(async task => {
+        let {block_uuid, sync_period, repo, query, recent_day} = task
+        let sync_duration = Duration.parse(sync_period);
 
-        if (recent && recent.length > 0) {
-            const pastDay = parseInt(recent)
-            if (pastDay > 0) {
-                const now = new Date()
-                now.setDate(now.getDate() - pastDay)
-                query += ` updated:>=${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
+        const sync_issues = async () => {
+            if (recent_day > 0) {
+                const pastDay = parseInt(recent_day)
+                if (pastDay > 0) {
+                    const past = LocalDate.now().atStartOfDay().minusDays(pastDay)
+                    query += ` updated:>=${past.format(DateTimeFormatter.ISO_LOCAL_DATE)}`
+                }
             }
-        }
-        logseq.provideUI({
-            slot, reset: true,
-            template: await renderGithubIssues(repo, query, targetUUID)
-        })
+    
+            let target_block = await logseq.Editor.getBlock(block_uuid)
+            const blocks = await renderGithubIssuesToBlocks(repo, query)
+
+            let exist_children = target_block.children || [];
+            // remove disappeared issues
+            await Promise.all(exist_children.map(async child => {
+                const child_block = await logseq.Editor.getBlock(child[1])
+                if (child_block == null) {
+                    return
+                }
+                
+                if (blocks.find(b => b.properties?.issue_number == child_block.properties?.issueNumber) == undefined) {
+                    // TODO: support other merge strategy
+                    logseq.Editor.removeBlock(child_block.uuid)
+                }
+            }))
+            
+            const children_entities = (await Promise.all(exist_children.map(async child => {
+                return await logseq.Editor.getBlock(child[1])
+            }))).filter(item => item != null)
+            // add new issues
+            await Promise.all(blocks.map(async block => {
+                if (children_entities.find(child => {
+                    return child.properties?.issueNumber == block.properties?.issue_number
+                }) == undefined) {
+                    // This is a new block
+                    logseq.Editor.insertBlock(target_block.uuid, block.content, {
+                        sibling: false,
+                        properties: block.properties,
+                    })
+                }
+            }))
+        };
+        await sync_issues();
+        setInterval(sync_issues, sync_duration.toMillis())
     })
 }
 

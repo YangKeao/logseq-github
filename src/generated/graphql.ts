@@ -22675,7 +22675,7 @@ export type WorkflowRunPendingDeploymentRequestsArgs = {
   last?: InputMaybe<Scalars['Int']>;
 };
 
-export type GetPullRequestDetailQueryVariables = Exact<{
+export type Get_Pull_Request_DetailQueryVariables = Exact<{
   query: Scalars['String'];
   first: Scalars['Int'];
   before?: InputMaybe<Scalars['String']>;
@@ -22683,9 +22683,9 @@ export type GetPullRequestDetailQueryVariables = Exact<{
 }>;
 
 
-export type GetPullRequestDetailQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue' } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest', id: string, title: string, url: any, state: PullRequestState, isDraft: boolean, mergedAt?: any | null | undefined, number: number } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
+export type Get_Pull_Request_DetailQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue' } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest', id: string, title: string, url: any, state: PullRequestState, isDraft: boolean, mergedAt?: any | null | undefined, number: number } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
 
-export type GetIssuesQueryVariables = Exact<{
+export type Get_IssuesQueryVariables = Exact<{
   query: Scalars['String'];
   first: Scalars['Int'];
   before?: InputMaybe<Scalars['String']>;
@@ -22693,11 +22693,11 @@ export type GetIssuesQueryVariables = Exact<{
 }>;
 
 
-export type GetIssuesQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue', id: string, title: string, url: any, state: IssueState, number: number } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest' } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
+export type Get_IssuesQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue', id: string, title: string, url: any, state: IssueState, number: number } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest' } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
 
 
-export const GetPullRequestDetailDocument = gql`
-    query getPullRequestDetail($query: String!, $first: Int!, $before: String, $after: String) {
+export const Get_Pull_Request_DetailDocument = gql`
+    query get_pull_request_detail($query: String!, $first: Int!, $before: String, $after: String) {
   search(
     query: $query
     first: $first
@@ -22722,8 +22722,8 @@ export const GetPullRequestDetailDocument = gql`
   }
 }
     `;
-export const GetIssuesDocument = gql`
-    query getIssues($query: String!, $first: Int!, $before: String, $after: String) {
+export const Get_IssuesDocument = gql`
+    query get_issues($query: String!, $first: Int!, $before: String, $after: String) {
   search(
     query: $query
     first: $first
@@ -22754,11 +22754,11 @@ const defaultWrapper: SdkFunctionWrapper = (action, _operationName) => action();
 
 export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
   return {
-    getPullRequestDetail(variables: GetPullRequestDetailQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetPullRequestDetailQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetPullRequestDetailQuery>(GetPullRequestDetailDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getPullRequestDetail');
+    get_pull_request_detail(variables: Get_Pull_Request_DetailQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<Get_Pull_Request_DetailQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<Get_Pull_Request_DetailQuery>(Get_Pull_Request_DetailDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'get_pull_request_detail');
     },
-    getIssues(variables: GetIssuesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetIssuesQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetIssuesQuery>(GetIssuesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getIssues');
+    get_issues(variables: Get_IssuesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<Get_IssuesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<Get_IssuesQuery>(Get_IssuesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'get_issues');
     }
   };
 }

@@ -20,6 +20,7 @@
     "parcel": "^2.0.1"
   },
   "dependencies": {
+    "@js-joda/core": "^5.0.0",
     "@types/node": "^17.0.5",
     "graphql": "^16.2.0",
     "graphql-request": "^3.7.0"

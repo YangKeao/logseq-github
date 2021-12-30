@@ -842,6 +842,11 @@
   resolved "https://registry.yarnpkg.com/@iarna/toml/-/toml-2.2.5.tgz#b32366c89b43c6f8cefbdefac778b9c828e3ba8c"
   integrity sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==
 
+"@js-joda/core@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@js-joda/core/-/core-5.0.0.tgz#af96589e01c31c35cee003e8d71e3a9c205ae5ae"
+  integrity sha512-Q7OBg6HZnXXWjfVubac8HfWsjQrEY6LQ6Z1wBWotEtzuY+7X5llO+Ih9qyP3uxz/k+muNk/pQPdAfMscyM+TiA==
+
 "@logseq/libs@^0.0.1-alpha.34":
   version "0.0.1-alpha.34"
   resolved "https://registry.yarnpkg.com/@logseq/libs/-/libs-0.0.1-alpha.34.tgz#19c43872f9cf21396ac3fe891b166c73b6f42d75"

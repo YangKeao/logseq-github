@@ -1,4 +1,4 @@
-query getPullRequestDetail($query: String!, $first: Int!, $before: String, $after: String) {
+query get_pull_request_detail($query: String!, $first: Int!, $before: String, $after: String) {
     search(query: $query, first: $first, type: ISSUE, before: $before, after: $after) {
         edges {
             cursor
@@ -17,7 +17,7 @@ query getPullRequestDetail($query: String!, $first: Int!, $before: String, $afte
     }
 }
 
-query getIssues($query: String!, $first: Int!, $before: String, $after: String) {
+query get_issues($query: String!, $first: Int!, $before: String, $after: String) {
     search(query: $query, first: $first, type: ISSUE, before: $before, after: $after) {
         edges {
             cursor

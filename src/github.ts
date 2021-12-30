@@ -124,16 +124,16 @@ export class GithubClient {
         this.client = getSdk(graphqlClient)
     }
 
-    async listAllIssues(repo: string, query: string) {
+    async list_all_issues(repo: string, query: string) {
         const limit = 20
         
         let issues = []
-        let afterId = null
+        let after_id = null
         while(true) {
-            const response = await this.client.getIssues({
+            const response = await this.client.get_issues({
                 query: query + ` repo:${repo} is:issue`,
                 first: limit,
-                after: afterId,
+                after: after_id,
             })
             issues = issues.concat(response.search.edges.map(edge => edge.node))
 
@@ -141,20 +141,20 @@ export class GithubClient {
                 break
             } else {
                 const last_edge = response.search.edges[response.search.edges.length - 1]
-                afterId = last_edge.cursor
+                after_id = last_edge.cursor
             }
         }
 
         return issues
     }
 
-    async listRecentMergedPRInRepo(username: string, repo: string, after: Date) {
+    async list_recent_merged_pr_in_repo(username: string, repo: string, after: Date) {
         const limit = 20
 
         let prs = []
         let afterId = null
         while(true) {
-            const response = await this.client.getPullRequestDetail({
+            const response = await this.client.get_pull_request_detail({
                 query: `author:${username} repo:${repo} is:merged is:pr`,
                 first: limit,
                 after: afterId,
@@ -173,13 +173,13 @@ export class GithubClient {
         return prs
     }
 
-    async listAllOpenedPRInRepo(username: string, repo: string) {
+    async list_all_opened_pr_in_repo(username: string, repo: string) {
         const limit = 20
 
         let prs = []
         let afterId = null
         while(true) {
-            const response = await this.client.getPullRequestDetail({
+            const response = await this.client.get_pull_request_detail({
                 query: `author:${username} repo:${repo} is:open is:pr`,
                 first: limit,
                 after: afterId
