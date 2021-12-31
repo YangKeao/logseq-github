@@ -161,12 +161,7 @@ function main () {
 
             let exist_children = target_block.children as Array<BlockEntity> || [] ;
             // remove disappeared issues
-            await Promise.all(exist_children.map(async child => {
-                const child_block = await logseq.Editor.getBlock(child[1])
-                if (child_block == null) {
-                    return
-                }
-                
+            await Promise.all(exist_children.map(async child_block => {
                 if (blocks.find(b => b.properties?.issue_number == child_block.properties?.issueNumber) == undefined) {
                     // TODO: support other merge strategy
                     console.log("logseq-github: remove issue", child_block.properties?.issueNumber)

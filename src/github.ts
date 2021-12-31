@@ -131,7 +131,7 @@ export class GithubClient {
         let after_id = null
         while(true) {
             const response = await this.client.get_issues({
-                query: query + ` repo:${repo} is:issue`,
+                query: query + ` repo:${repo}`,
                 first: limit,
                 after: after_id,
             })

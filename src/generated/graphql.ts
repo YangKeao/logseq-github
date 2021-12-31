@@ -14410,8 +14410,8 @@ export type Push = Node & {
   permalink: Scalars['URI'];
   /** The SHA before the push */
   previousSha?: Maybe<Scalars['GitObjectID']>;
-  /** The user who pushed */
-  pusher: User;
+  /** The actor who pushed */
+  pusher: Actor;
   /** The repository that was pushed to */
   repository: Repository;
 };
@@ -22693,7 +22693,7 @@ export type Get_IssuesQueryVariables = Exact<{
 }>;
 
 
-export type Get_IssuesQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue', id: string, title: string, url: any, state: IssueState, number: number } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest' } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
+export type Get_IssuesQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', edges?: Array<{ __typename?: 'SearchResultItemEdge', cursor: string, node?: { __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue', id: string, title: string, url: any, number: number } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest', id: string, title: string, url: any, number: number } | { __typename?: 'Repository' } | { __typename?: 'User' } | null | undefined } | null | undefined> | null | undefined } };
 
 
 export const Get_Pull_Request_DetailDocument = gql`
@@ -22738,7 +22738,12 @@ export const Get_IssuesDocument = gql`
           id
           title
           url
-          state
+          number
+        }
+        ... on PullRequest {
+          id
+          title
+          url
           number
         }
       }
