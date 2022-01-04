@@ -47,8 +47,8 @@ type GithubUrl = GithubPRUrl | GithubIssueUrl | GithubDiscussUrl | GithubRepoUrl
 
 export const parseGithubUrl = (rawUrl: string): GithubUrl | null => {
     const url = new URL(rawUrl)
-    if (url.host != "github.com") return null
-    if (url.hostname != "github.com") return null
+    if (url.host !== "github.com") return null
+    if (url.hostname !== "github.com") return null
 
     const path = url.pathname.split('/').filter(part => part.length > 0)
     if (path.length < 2) return null
@@ -58,15 +58,15 @@ export const parseGithubUrl = (rawUrl: string): GithubUrl | null => {
         repo: path[1],
     }
     // the length of url is greater or equal than 2
-    if (path.length == 2) {
+    if (path.length === 2) {
         return {
             type: 'repo',
             repo,
         }
-    } else if (path.length == 3) {
+    } else if (path.length === 3) {
         // the url is a list for PR or issue or discussion
         return null
-    } else if (path[2] == 'pull') {
+    } else if (path[2] === 'pull') {
         let comment: null | string = null
         if (url.hash.startsWith("#issuecomment-")) {
             comment = url.hash.slice("#issuecomment-".length)
@@ -74,10 +74,10 @@ export const parseGithubUrl = (rawUrl: string): GithubUrl | null => {
         return {
             type: 'pr',
             repo,
-            number: parseInt(path[3]),
+            number: parseInt(path[3], 10),
             comment,
         }
-    } else if (path[2] == 'issues') {
+    } else if (path[2] === 'issues') {
         let comment: null | string = null
         if (url.hash.startsWith("#issuecomment-")) {
             comment = url.hash.slice("#issuecomment-".length)
@@ -85,10 +85,10 @@ export const parseGithubUrl = (rawUrl: string): GithubUrl | null => {
         return {
             type: 'issue',
             repo,
-            number: parseInt(path[3]),
+            number: parseInt(path[3], 10),
             comment,
         }
-    } else if (path[2] == 'discussions') {
+    } else if (path[2] === 'discussions') {
         let comment: null | string = null
         if (url.hash.startsWith("#discussioncomment-")) {
             comment = url.hash.slice("#discussioncomment-".length)
@@ -96,10 +96,10 @@ export const parseGithubUrl = (rawUrl: string): GithubUrl | null => {
         return {
             type: 'discuss',
             repo,
-            number: parseInt(path[3]),
+            number: parseInt(path[3], 10),
             comment,
         }
-    } else if (path[2] == 'commit') {
+    } else if (path[2] === 'commit') {
         return {
             type: 'commit',
             repo,
@@ -124,24 +124,24 @@ export class GithubClient {
         this.client = getSdk(graphqlClient)
     }
 
-    async list_all_issues(repo: string, query: string) {
+    async listAllIssues(repo: string, query: string) {
         const limit = 20
-        
+
         let issues = []
-        let after_id = null
+        let afterId = null
         while(true) {
-            const response = await this.client.get_issues({
+            const response = await this.client.getIssues({
                 query: query + ` repo:${repo}`,
                 first: limit,
-                after: after_id,
+                after: afterId,
             })
             issues = issues.concat(response.search.edges.map(edge => edge.node))
 
             if (response.search.edges.length < limit) {
                 break
             } else {
-                const last_edge = response.search.edges[response.search.edges.length - 1]
-                after_id = last_edge.cursor
+                const lastEdge = response.search.edges[response.search.edges.length - 1]
+                afterId = lastEdge.cursor
             }
         }
 
@@ -154,7 +154,7 @@ export class GithubClient {
         let prs = []
         let afterId = null
         while(true) {
-            const response = await this.client.get_pull_request_detail({
+            const response = await this.client.getPullRequestDetail({
                 query: `author:${username} repo:${repo} is:merged is:pr`,
                 first: limit,
                 after: afterId,
@@ -165,21 +165,21 @@ export class GithubClient {
             if (recentMergedPr.length < limit) {
                 break
             } else {
-                const last_edge = response.search.edges[response.search.edges.length - 1]
-                afterId = last_edge.cursor
+                const lastEdge = response.search.edges[response.search.edges.length - 1]
+                afterId = lastEdge.cursor
             }
         }
-        
+
         return prs
     }
 
-    async list_all_opened_pr_in_repo(username: string, repo: string) {
+    async listAllOpenedPRInRepo(username: string, repo: string) {
         const limit = 20
 
         let prs = []
         let afterId = null
         while(true) {
-            const response = await this.client.get_pull_request_detail({
+            const response = await this.client.getPullRequestDetail({
                 query: `author:${username} repo:${repo} is:open is:pr`,
                 first: limit,
                 after: afterId
@@ -189,8 +189,8 @@ export class GithubClient {
             if (response.search.edges.length < limit) {
                 break
             } else {
-                const last_edge = response.search.edges[response.search.edges.length - 1]
-                afterId = last_edge.cursor
+                const lastEdge = response.search.edges[response.search.edges.length - 1]
+                afterId = lastEdge.cursor
             }
         }
 

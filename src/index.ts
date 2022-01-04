@@ -6,23 +6,23 @@ import { DateTimeFormatter, Duration, LocalDate } from '@js-joda/core'
 
 import {parseGithubUrl, GithubClient} from './github'
 
-const github_url_slash_command = async () => {
+const githubUrlSlashCommand = async () => {
     await logseq.Editor.insertAtEditingCursor(
         `{{renderer :githubUrl}}`
     )
 }
 
-const github_lastweek_pull_request_slash_command = async () => {
-    let now = new Date()
-    let day = now.getDay()
+const githubLastweekPullRequestSlashCommand = async () => {
+    const now = new Date()
+    const day = now.getDay()
     let mondayDate = now.getDate() - day
-    if (day == 0) {
+    if (day === 0) {
         mondayDate -= 6
     } else {
         mondayDate += 1
     }
-    
-    let monday = new Date(now.setDate(mondayDate));
+
+    const monday = new Date(now.setDate(mondayDate));
     monday.setHours(0);
     monday.setMinutes(0);
     monday.setSeconds(0);
@@ -30,7 +30,7 @@ const github_lastweek_pull_request_slash_command = async () => {
     const currentBlock = await logseq.Editor.getCurrentBlock()
     const [username, repo] = currentBlock.content.split(",").map(item => item.trim())
 
-    const newBlocks = await render_github_recent_pull_request_to_blocks(username, repo, new Date(monday));
+    const newBlocks = await renderGithubRecentPullRequestToBlocks(username, repo, new Date(monday));
     newBlocks.forEach(b => {
         logseq.Editor.insertBlock(currentBlock.uuid, b.content, {
             sibling: false,
@@ -38,14 +38,14 @@ const github_lastweek_pull_request_slash_command = async () => {
     })
 }
 
-const render_github_url = (url: string, renderRepoName: boolean = true, html: boolean = true) => {
+const renderGithubUrl = (url: string, renderRepoName: boolean = true, html: boolean = true) => {
     const parsed = parseGithubUrl(url)
     if (parsed == null) {
         return `<a target="_blank" href="${url}" class="external-link">INVALID URL</a>`
     }
 
     let content = renderRepoName ? `${parsed.repo.owner}/${parsed.repo.repo}` : ""
-    
+
     switch (parsed.type) {
     case 'repo':
         break
@@ -72,32 +72,32 @@ const render_github_url = (url: string, renderRepoName: boolean = true, html: bo
     }
 }
 
-const render_github_recent_pull_request_to_blocks = async (username: string, repo: string, mergedPrAfter: Date) => {
-    const token = logseq.settings["github_access_token"];
+const renderGithubRecentPullRequestToBlocks = async (username: string, repo: string, mergedPrAfter: Date) => {
+    const token = logseq.settings.github_access_token;
     if (token == null) {
         throw new Error("Github access token is not set")
     }
 
     const client = new GithubClient(token)
-    const opened_pr = await client.list_all_opened_pr_in_repo(username, repo)
-    const merged_pr = await client.list_recent_merged_pr_in_repo(username, repo, mergedPrAfter)
+    const openedPr = await client.listAllOpenedPRInRepo(username, repo)
+    const mergedPr = await client.list_recent_merged_pr_in_repo(username, repo, mergedPrAfter)
 
-    let blocks = []
-    opened_pr.forEach((activity: any) => {
+    const blocks = []
+    openedPr.forEach((activity: any) => {
         let tag = ""
         if (activity.isDraft) {
             tag = "\[WIP]"
-        } else if (activity.state == "OPEN") {
+        } else if (activity.state === "OPEN") {
             tag = "\[REVIEW]"
         }
         blocks.push({
-            content: `${tag} ${activity.title.replaceAll('#', '\\#')}${render_github_url(activity.url, false, false)}`
+            content: `${tag} ${activity.title.replaceAll('#', '\\#')}${renderGithubUrl(activity.url, false, false)}`
         })
     })
-    merged_pr.forEach((activity: any) => {
-        let tag = "\[DONE]"
+    mergedPr.forEach((activity: any) => {
+        const tag = "\[DONE]"
         blocks.push({
-            content: `${tag} ${activity.title.replaceAll('#', '\\#')}${render_github_url(activity.url, false, false)}`
+            content: `${tag} ${activity.title.replaceAll('#', '\\#')}${renderGithubUrl(activity.url, false, false)}`
         })
     })
 
@@ -105,13 +105,13 @@ const render_github_recent_pull_request_to_blocks = async (username: string, rep
 }
 
 const renderGithubIssuesToBlocks = async (repo: string, query: string) => {
-    const token = logseq.settings["github_access_token"];
+    const token = logseq.settings.github_access_token;
     if (token == null) {
         throw new Error("Github access token is not set")
     }
 
     const client = new GithubClient(token)
-    const issues = await client.list_all_issues(repo, query)
+    const issues = await client.listAllIssues(repo, query)
 
     return issues.map((issue: any) => {
         return {
@@ -125,8 +125,8 @@ const renderGithubIssuesToBlocks = async (repo: string, query: string) => {
 }
 
 async function main () {
-    logseq.Editor.registerSlashCommand('Github Url', github_url_slash_command)
-    logseq.Editor.registerSlashCommand('Github Last Week Pull Request', github_lastweek_pull_request_slash_command)
+    logseq.Editor.registerSlashCommand('Github Url', githubUrlSlashCommand)
+    logseq.Editor.registerSlashCommand('Github Last Week Pull Request', githubLastweekPullRequestSlashCommand)
 
     logseq.App.onMacroRendererSlotted(({slot, payload}) => {
         const [type, url] = payload.arguments
@@ -134,14 +134,14 @@ async function main () {
 
         logseq.provideUI({
             slot, reset: true,
-            template: render_github_url(url)
+            template: renderGithubUrl(url)
         })
     })
 
-    let sync_period = parse(logseq.settings["sync_period"] || "5m", "ms");
+    const syncPeriod = parse(logseq.settings.sync_period || "5m", "ms");
 
-    const sync_issues = async () => {
-        const blocks = (await logseq.DB.datascriptQuery(`
+    const syncIssues = async () => {
+        const targetBlocks = (await logseq.DB.datascriptQuery(`
         [
             :find (pull ?b [*])
             :where
@@ -151,57 +151,58 @@ async function main () {
             [(not= ?r "nil")]
             [(not= ?q "nil")]
         ]
-        `)).map(block_array => block_array[0]);
+        `)).map(blockArray => blockArray[0]);
 
-        blocks.forEach(async (block: any) => {
+        targetBlocks.forEach(async (block: any) => {
             // TODO: get uuid in a better way
-            let block_uuid = block.uuid.$uuid$
-            let repo = block.properties.repo
+            const blockUuid = block.uuid.$uuid$
+            const repo = block.properties.repo
             let query = block.properties.query
-            let recent_day = block.properties["recent-day"] || 0
+            const recentDay = block.properties["recent-day"] || 0
 
-            console.log("logseq-github: sync issues", `uuid: ${block_uuid}`)
+            console.log("logseq-github: sync issues", `uuid: ${blockUuid}`)
 
-            if (recent_day > 0) {
-                const past = LocalDate.now().atStartOfDay().minusDays(recent_day)
+            if (recentDay > 0) {
+                const past = LocalDate.now().atStartOfDay().minusDays(recentDay)
                 query += ` updated:>=${past.format(DateTimeFormatter.ISO_LOCAL_DATE)}`
             }
 
             // `includeChildren` will not only get children, but also clear the children cache
-            let target_block = await logseq.Editor.getBlock(block_uuid, {
+            const targetBlock = await logseq.Editor.getBlock(blockUuid, {
                 includeChildren: true,
             })
-            console.log(target_block)
-            const blocks = await renderGithubIssuesToBlocks(repo, query)
+            const renderedBlocks = await renderGithubIssuesToBlocks(repo, query)
 
-            let exist_children = target_block.children as Array<BlockEntity> || [] ;
+            const existChildren = targetBlock.children as BlockEntity[] || [] ;
             // remove disappeared issues
-            await Promise.all(exist_children.map(async child_block => {
-                if (blocks.find(b => b.properties?.issue_number == child_block.properties?.issueNumber) == undefined) {
+            await Promise.all(existChildren.map(async childBlock => {
+                if (renderedBlocks.find(b => b.properties?.issue_number === childBlock.properties?.issueNumber) === undefined) {
                     // TODO: support other merge strategy
-                    console.log("logseq-github: remove issue", child_block.properties?.issueNumber)
-                    await logseq.Editor.removeBlock(child_block.uuid)
+                    console.log("logseq-github: remove issue", childBlock.properties?.issueNumber, renderedBlocks)
+                    await logseq.Editor.removeBlock(childBlock.uuid)
                 }
             }))
-            
+
             // add new issues
-            await Promise.all(blocks.map(async block => {
-                if (exist_children.find(child => {
-                    return child.properties?.issueNumber == block.properties?.issue_number
-                }) == undefined) {
+            await Promise.all(renderedBlocks.map(async renderedBlock => {
+                if (existChildren.find(child => {
+                    return child.properties?.issueNumber === renderedBlock.properties?.issue_number
+                }) === undefined) {
                     // This is a new block
-                    console.log("logseq-github: insert issue", block.properties?.issue_number)
-                    await logseq.Editor.insertBlock(target_block.uuid, block.content, {
+                    console.log("logseq-github: insert issue", renderedBlock.properties?.issue_number)
+                    await logseq.Editor.insertBlock(targetBlock.uuid, renderedBlock.content, {
                         sibling: false,
-                        properties: block.properties,
+                        properties: renderedBlock.properties,
                     })
                 }
             }))
+
+            console.log("logseq-github: sync finished", `uuid: ${blockUuid}`)
         })
     };
     console.log("logseq-github: setup interval controller for issues")
-    setInterval(sync_issues, sync_period)
-    await sync_issues();
+    setInterval(syncIssues, syncPeriod)
+    await syncIssues();
 }
 
 logseq.ready(main).catch((e) => {
