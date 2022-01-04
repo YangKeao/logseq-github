@@ -1,7 +1,6 @@
 {
-    "extends": ["tslint:recommended"],
-    "rules": {
-      "no-console": false
-    }
+  "extends": ["tslint:recommended"],
+  "rules": {
+    "no-console": false
   }
-  
+}

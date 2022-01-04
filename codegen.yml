@@ -1,5 +1,5 @@
 overwrite: true
-schema: 
+schema:
   - https://api.github.com/graphql:
       headers:
         Authorization: "Bearer ${API_TOKEN}"

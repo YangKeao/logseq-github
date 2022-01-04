@@ -1,40 +1,62 @@
-query getPullRequestDetail($query: String!, $first: Int!, $before: String, $after: String) {
-    search(query: $query, first: $first, type: ISSUE, before: $before, after: $after) {
-        edges {
-            cursor
-            node {
-                ... on PullRequest {
-                    id
-                    title
-                    url
-                    state
-                    isDraft
-                    mergedAt
-                    number
-                }
-            }
+query getPullRequestDetail(
+  $query: String!
+  $first: Int!
+  $before: String
+  $after: String
+) {
+  search(
+    query: $query
+    first: $first
+    type: ISSUE
+    before: $before
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        ... on PullRequest {
+          id
+          title
+          url
+          state
+          isDraft
+          mergedAt
+          number
         }
+      }
     }
+  }
 }
 
-query getIssues($query: String!, $first: Int!, $before: String, $after: String) {
-    search(query: $query, first: $first, type: ISSUE, before: $before, after: $after) {
-        edges {
-            cursor
-            node {
-                ... on Issue {
-                    id
-                    title
-                    url
-                    number
-                }
-                ... on PullRequest {
-                    id
-                    title
-                    url
-                    number
-                }
-            }
+query getIssues(
+  $query: String!
+  $first: Int!
+  $before: String
+  $after: String
+) {
+  search(
+    query: $query
+    first: $first
+    type: ISSUE
+    before: $before
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        ... on Issue {
+          id
+          title
+          url
+          number
         }
+        ... on PullRequest {
+          id
+          title
+          url
+          number
+        }
+      }
     }
+  }
 }

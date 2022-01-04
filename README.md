@@ -12,7 +12,7 @@ An example of the settings is like below:
 {
   "disabled": false,
   "github_access_token": "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",
-  "sync_period": "5m"
+  "sync_period": "5m",
 }
 ```
 
@@ -24,6 +24,7 @@ For every block with `repo` and `query` attributions, the plugin will send the q
 
 ```markdown
 ## Pull Request Request for Review
+
 repo:: chaos-mesh/chaos-mesh
 query:: is:pr is:open user-review-requested:@me
 ```
