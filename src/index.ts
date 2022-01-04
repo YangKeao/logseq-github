@@ -1,7 +1,7 @@
 import '@logseq/libs'
 import {BlockEntity} from '@logseq/libs/dist/LSPlugin'
 
-import '@js-joda/core'
+import parse from 'parse-duration'
 import { DateTimeFormatter, Duration, LocalDate } from '@js-joda/core'
 
 import {parseGithubUrl, GithubClient} from './github'
@@ -124,7 +124,7 @@ const renderGithubIssuesToBlocks = async (repo: string, query: string) => {
     })
 }
 
-function main () {
+async function main () {
     logseq.Editor.registerSlashCommand('Github Url', github_url_slash_command)
     logseq.Editor.registerSlashCommand('Github Last Week Pull Request', github_lastweek_pull_request_slash_command)
 
@@ -138,25 +138,40 @@ function main () {
         })
     })
 
-    logseq.settings?.issue_block?.forEach(async task => {
-        let {block_uuid, sync_period, repo, query, recent_day} = task
-        let sync_duration = Duration.parse(sync_period);
+    let sync_period = parse(logseq.settings["sync_period"] || "5m", "ms");
 
-        const sync_issues = async () => {
+    const sync_issues = async () => {
+        const blocks = (await logseq.DB.datascriptQuery(`
+        [
+            :find (pull ?b [*])
+            :where
+            [?b :block/properties ?p]
+            [(get ?p :repo) ?r]
+            [(get ?p :query) ?q]
+            [(not= ?r "nil")]
+            [(not= ?q "nil")]
+        ]
+        `)).map(block_array => block_array[0]);
+
+        blocks.forEach(async (block: any) => {
+            // TODO: get uuid in a better way
+            let block_uuid = block.uuid.$uuid$
+            let repo = block.properties.repo
+            let query = block.properties.query
+            let recent_day = block.properties["recent-day"] || 0
+
             console.log("logseq-github: sync issues", `uuid: ${block_uuid}`)
 
             if (recent_day > 0) {
-                const pastDay = parseInt(recent_day)
-                if (pastDay > 0) {
-                    const past = LocalDate.now().atStartOfDay().minusDays(pastDay)
-                    query += ` updated:>=${past.format(DateTimeFormatter.ISO_LOCAL_DATE)}`
-                }
+                const past = LocalDate.now().atStartOfDay().minusDays(recent_day)
+                query += ` updated:>=${past.format(DateTimeFormatter.ISO_LOCAL_DATE)}`
             }
-    
+
             // `includeChildren` will not only get children, but also clear the children cache
             let target_block = await logseq.Editor.getBlock(block_uuid, {
                 includeChildren: true,
             })
+            console.log(target_block)
             const blocks = await renderGithubIssuesToBlocks(repo, query)
 
             let exist_children = target_block.children as Array<BlockEntity> || [] ;
@@ -165,7 +180,7 @@ function main () {
                 if (blocks.find(b => b.properties?.issue_number == child_block.properties?.issueNumber) == undefined) {
                     // TODO: support other merge strategy
                     console.log("logseq-github: remove issue", child_block.properties?.issueNumber)
-                    logseq.Editor.removeBlock(child_block.uuid)
+                    await logseq.Editor.removeBlock(child_block.uuid)
                 }
             }))
             
@@ -176,17 +191,17 @@ function main () {
                 }) == undefined) {
                     // This is a new block
                     console.log("logseq-github: insert issue", block.properties?.issue_number)
-                    logseq.Editor.insertBlock(target_block.uuid, block.content, {
+                    await logseq.Editor.insertBlock(target_block.uuid, block.content, {
                         sibling: false,
                         properties: block.properties,
                     })
                 }
             }))
-        };
-        console.log("logseq-github: setup interval controller for issues", `uuid: ${block_uuid}`)
-        setInterval(sync_issues, sync_duration.toMillis())
-        await sync_issues()
-    })
+        })
+    };
+    console.log("logseq-github: setup interval controller for issues")
+    setInterval(sync_issues, sync_period)
+    await sync_issues();
 }
 
 logseq.ready(main).catch((e) => {
