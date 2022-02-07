@@ -12,7 +12,7 @@ An example of the settings is like below:
 {
   "disabled": false,
   "github_access_token": "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",
-  "sync_period": "5m",
+  "sync_period": "5m"
 }
 ```
 
@@ -35,7 +35,7 @@ After enabling the plugin, all pull requests waiting for your review will be ins
 
 `repo` represents the target repo.
 
-`query` specifies the search query for github. You can read more about the syntax in [Understanding the search syntax](https://docs.github.com/en/search-github/getting-started-with-searching-on-github/understanding-the-search-syntax
+`query` specifies the search query for github. You can read more about the syntax in [Understanding the search syntax](https://docs.github.com/en/search-github/getting-started-with-searching-on-github/understanding-the-search-syntax)
 
 `recent_day` means to get issues/prs whose updated time is later than "`recent_day`" days ago.
 
